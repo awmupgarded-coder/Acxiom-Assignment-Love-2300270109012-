@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Event Management System</title>
     <style>
-        /* Styles matched to PDF grey/blue theme */
         body { font-family: 'Segoe UI', sans-serif; background-color: #f0f0f0; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
         .container { width: 800px; background-color: #dcdcdc; border: 1px solid #aaa; padding: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); position: relative; min-height: 500px; }
         .header { background-color: #a0c4ff; padding: 15px; text-align: center; border: 1px solid #7aa7eb; margin-bottom: 30px; font-weight: bold; font-size: 1.2em; }
@@ -14,7 +13,7 @@
         .btn-cancel { background-color: #888; }
         input, select { padding: 10px; margin: 5px; border-radius: 5px; border: 1px solid #ccc; width: 250px; }
         .form-group { display: flex; align-items: center; justify-content: center; margin-bottom: 15px; }
-        .form-label { width: 120px; background-color: #4a90e2; color: white; padding: 10px; border-radius: 5px; text-align: center; margin-right: 10px; }
+        .form-label { width: 150px; background-color: #4a90e2; color: white; padding: 10px; border-radius: 5px; text-align: center; margin-right: 10px; }
         .view { display: none; text-align: center; }
         .view.active { display: block; }
         .grid-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; padding: 20px; }
@@ -26,6 +25,10 @@
         .top-nav { display: flex; justify-content: space-between; margin-bottom: 20px; }
         .error-msg { color: red; margin-top: 10px; }
         .chart-link { position: absolute; top: 10px; left: 10px; background: #4a90e2; color: white; font-size: 10px; padding: 5px; text-decoration: none; }
+        
+        /* PDF Requirement: Radio Buttons */
+        .radio-group { text-align: left; width: 250px; }
+        .radio-group label { display: block; margin: 5px 0; }
     </style>
 </head>
 <body>
@@ -82,14 +85,67 @@
             <button class="btn" onclick="registerUser('user')">Sign Up</button>
         </div>
 
-        <!-- 5. ADMIN HOME -->
+        <!-- 5. ADMIN HOME (Updated) -->
         <div id="view-admin-home" class="view">
             <div class="top-nav"><button class="btn" disabled>Home</button><button class="btn btn-cancel" onclick="logout()">LogOut</button></div>
             <div class="header">Welcome Admin</div>
-            <br><button class="btn">Maintain User/Vendor</button><button class="btn">Reports</button>
+            <br>
+            <!-- Fixed: Added onclick to go to Maintenance Menu -->
+            <button class="btn" onclick="showView('view-admin-maintenance')">Maintain User/Vendor</button>
+            <button class="btn" onclick="alert('Reports Module')">Reports</button>
         </div>
 
-        <!-- 6. VENDOR HOME -->
+        <!-- 6. ADMIN MAINTENANCE MENU (New - Matches PDF Page 20/21) -->
+        <div id="view-admin-maintenance" class="view">
+            <div class="top-nav"><button class="btn" onclick="showView('view-admin-home')">Home</button><button class="btn btn-cancel" onclick="logout()">LogOut</button></div>
+            <div class="header">Maintenance Menu</div>
+            <div style="display: flex; justify-content: space-around;">
+                <div style="border:1px solid #999; padding: 20px; background: white;">
+                    <h4>Membership</h4>
+                    <button class="btn" onclick="showView('view-admin-add-membership')">Add</button><br>
+                    <button class="btn" onclick="alert('Update Feature Placeholder')">Update</button>
+                </div>
+                <div style="border:1px solid #999; padding: 20px; background: white;">
+                    <h4>User Management</h4>
+                    <button class="btn" onclick="loadAdminUsers()">View/Manage</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 7. ADD MEMBERSHIP (New - Matches PDF Page 1 Requirements) -->
+        <div id="view-admin-add-membership" class="view">
+            <div class="top-nav"><button class="btn" onclick="showView('view-admin-maintenance')">Back</button><button class="btn btn-cancel" onclick="logout()">LogOut</button></div>
+            <div class="header">Add Membership</div>
+            
+            <div class="form-group">
+                <div class="form-label">Vendor Name</div>
+                <input type="text" id="mem-vendor" placeholder="Enter Vendor ID/Name">
+            </div>
+
+            <div class="form-group">
+                <div class="form-label">Duration</div>
+                <!-- PDF Req: Radio buttons, select one, 6 months default -->
+                <div class="radio-group">
+                    <label><input type="radio" name="mem-duration" value="6 Months" checked> 6 Months</label>
+                    <label><input type="radio" name="mem-duration" value="1 Year"> 1 Year</label>
+                    <label><input type="radio" name="mem-duration" value="2 Years"> 2 Years</label>
+                </div>
+            </div>
+
+            <button class="btn" onclick="addMembership()">Add Membership</button>
+        </div>
+
+        <!-- 8. USER MANAGEMENT LIST (New) -->
+        <div id="view-admin-users" class="view">
+            <div class="top-nav"><button class="btn" onclick="showView('view-admin-maintenance')">Back</button><button class="btn btn-cancel" onclick="logout()">LogOut</button></div>
+            <div class="header">User Management</div>
+            <table id="admin-user-table">
+                <thead><tr><th>ID/Name</th><th>Role</th><th>Email</th><th>Category</th></tr></thead>
+                <tbody id="admin-user-body"></tbody>
+            </table>
+        </div>
+
+        <!-- 9. VENDOR HOME -->
         <div id="view-vendor-home" class="view">
             <div class="header">Welcome Vendor</div>
             <br>
@@ -99,7 +155,7 @@
             <button class="btn btn-cancel" onclick="logout()">LogOut</button>
         </div>
 
-        <!-- 7. VENDOR ADD PRODUCT -->
+        <!-- 10. VENDOR ADD PRODUCT -->
         <div id="view-vendor-add" class="view">
             <div class="header">Add Product</div>
             <div class="top-nav"><button class="btn" onclick="showView('view-vendor-home')">Home</button><button class="btn btn-cancel" onclick="logout()">LogOut</button></div>
@@ -108,7 +164,7 @@
             <button class="btn" onclick="addProduct()">Add The Product</button>
         </div>
 
-        <!-- 8. USER HOME -->
+        <!-- 11. USER HOME -->
         <div id="view-user-home" class="view">
             <div class="header">WELCOME USER</div>
             <br>
@@ -118,7 +174,7 @@
             <button class="btn btn-cancel" onclick="logout()">LogOut</button>
         </div>
 
-        <!-- 9. SHOP PRODUCTS -->
+        <!-- 12. SHOP PRODUCTS -->
         <div id="view-user-shop" class="view">
             <div class="top-nav"><button class="btn" onclick="showView('view-user-home')">Home</button><button class="btn btn-cancel" onclick="logout()">LogOut</button></div>
             <div class="header">Products</div>
@@ -126,7 +182,7 @@
             <button class="btn" onclick="showView('view-cart')">Go To Cart</button>
         </div>
 
-        <!-- 10. CART -->
+        <!-- 13. CART -->
         <div id="view-cart" class="view">
             <div class="top-nav"><button class="btn" onclick="showView('view-user-home')">Home</button><button class="btn btn-cancel" onclick="logout()">LogOut</button></div>
             <div class="header">Shopping Cart</div>
@@ -138,7 +194,7 @@
             <br><button class="btn" onclick="showView('view-checkout')">Proceed to Checkout</button>
         </div>
 
-        <!-- 11. CHECKOUT -->
+        <!-- 14. CHECKOUT -->
         <div id="view-checkout" class="view">
             <div class="header">Checkout</div>
             <div class="form-group"><input type="text" id="co-name" placeholder="Name"></div>
@@ -146,7 +202,7 @@
             <button class="btn" onclick="placeOrder()">Order Now</button>
         </div>
 
-        <!-- 12. THANK YOU -->
+        <!-- 15. THANK YOU -->
         <div id="view-thankyou" class="view">
             <div class="header">THANK YOU</div>
             <h2>Order Placed Successfully!</h2>
@@ -208,6 +264,39 @@
             }
         }
 
+        // --- ADMIN FUNCTIONS ---
+        async function loadAdminUsers() {
+            const res = await fetch('/api/users');
+            const users = await res.json();
+            const tbody = document.getElementById('admin-user-body');
+            tbody.innerHTML = '';
+            users.forEach(u => {
+                tbody.innerHTML += `<tr><td>${u.id}</td><td>${u.role}</td><td>${u.email || '-'}</td><td>${u.category || '-'}</td></tr>`;
+            });
+            showView('view-admin-users');
+        }
+
+        async function addMembership() {
+            const vendorId = document.getElementById('mem-vendor').value;
+            if(!vendorId) return alert("Vendor Name Required");
+            
+            // Get selected radio button
+            const duration = document.querySelector('input[name="mem-duration"]:checked').value;
+
+            const res = await fetch('/api/memberships', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ vendorId, duration })
+            });
+            
+            const data = await res.json();
+            if(data.success) {
+                alert("Membership Added Successfully! ID: " + data.membershipId);
+                showView('view-admin-maintenance');
+            }
+        }
+
+        // --- VENDOR/USER FUNCTIONS ---
         async function addProduct() {
             const name = document.getElementById('prod-name').value;
             const price = document.getElementById('prod-price').value;
