@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Management System</title>
+    <style>
+        /* Styles matched to PDF grey/blue theme */
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f0f0f0; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .container { width: 800px; background-color: #dcdcdc; border: 1px solid #aaa; padding: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); position: relative; min-height: 500px; }
+        .header { background-color: #a0c4ff; padding: 15px; text-align: center; border: 1px solid #7aa7eb; margin-bottom: 30px; font-weight: bold; font-size: 1.2em; }
+        .btn { background-color: #4a90e2; color: white; border: none; padding: 10px 20px; margin: 5px; border-radius: 5px; cursor: pointer; min-width: 100px; }
+        .btn:hover { background-color: #357abd; }
+        .btn-cancel { background-color: #888; }
+        input, select { padding: 10px; margin: 5px; border-radius: 5px; border: 1px solid #ccc; width: 250px; }
+        .form-group { display: flex; align-items: center; justify-content: center; margin-bottom: 15px; }
+        .form-label { width: 120px; background-color: #4a90e2; color: white; padding: 10px; border-radius: 5px; text-align: center; margin-right: 10px; }
+        .view { display: none; text-align: center; }
+        .view.active { display: block; }
+        .grid-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; padding: 20px; }
+        .card { background-color: #4a90e2; color: white; padding: 15px; border-radius: 10px; text-align: center; }
+        .card-inner { background-color: white; color: black; padding: 10px; margin-top: 10px; border-radius: 5px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background-color: white; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+        th { background-color: #4a90e2; color: white; }
+        .top-nav { display: flex; justify-content: space-between; margin-bottom: 20px; }
+        .error-msg { color: red; margin-top: 10px; }
+        .chart-link { position: absolute; top: 10px; left: 10px; background: #4a90e2; color: white; font-size: 10px; padding: 5px; text-decoration: none; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <a href="#" class="chart-link">CHART LINK</a>
+
+        <!-- 1. INDEX -->
+        <div id="view-index" class="view active">
+            <div class="header">Event Management System</div>
+            <h3>Welcome</h3>
+            <button class="btn" onclick="showView('view-login')">Login</button>
+            <button class="btn" onclick="showView('view-register-vendor')">Vendor Sign Up</button>
+            <button class="btn" onclick="showView('view-register-user')">User Sign Up</button>
+        </div>
+
+        <!-- 2. LOGIN -->
+        <div id="view-login" class="view">
+            <div class="header">Login Page</div>
+            <div class="form-group"><div class="form-label">User Id</div><input type="text" id="login-id"></div>
+            <div class="form-group"><div class="form-label">Password</div><input type="password" id="login-pass"></div>
+            <div class="error-msg" id="login-error"></div>
+            <br>
+            <button class="btn btn-cancel" onclick="showView('view-index')">Cancel</button>
+            <button class="btn" onclick="handleLogin()">Login</button>
+        </div>
+
+        <!-- 3. VENDOR REGISTRATION -->
+        <div id="view-register-vendor" class="view">
+            <div class="header">Vendor Registration</div>
+            <div class="form-group"><div class="form-label">Name</div><input type="text" id="v-name"></div>
+            <div class="form-group"><div class="form-label">Email</div><input type="email" id="v-email"></div>
+            <div class="form-group"><div class="form-label">Password</div><input type="password" id="v-pass"></div>
+            <div class="form-group">
+                <div class="form-label">Category</div>
+                <select id="v-category">
+                    <option>Catering</option>
+                    <option>Florist</option>
+                    <option>Decoration</option>
+                    <option>Lighting</option>
+                </select>
+            </div>
+            <button class="btn btn-cancel" onclick="showView('view-index')">Cancel</button>
+            <button class="btn" onclick="registerUser('vendor')">Sign Up</button>
+        </div>
+
+        <!-- 4. USER REGISTRATION -->
+        <div id="view-register-user" class="view">
+            <div class="header">User Registration</div>
+            <div class="form-group"><div class="form-label">Name</div><input type="text" id="u-name"></div>
+            <div class="form-group"><div class="form-label">Email</div><input type="email" id="u-email"></div>
+            <div class="form-group"><div class="form-label">Password</div><input type="password" id="u-pass"></div>
+            <button class="btn btn-cancel" onclick="showView('view-index')">Cancel</button>
+            <button class="btn" onclick="registerUser('user')">Sign Up</button>
+        </div>
+
+        <!-- 5. ADMIN HOME -->
+        <div id="view-admin-home" class="view">
+            <div class="top-nav"><button class="btn" disabled>Home</button><button class="btn btn-cancel" onclick="logout()">LogOut</button></div>
+            <div class="header">Welcome Admin</div>
+            <br><button class="btn">Maintain User/Vendor</button><button class="btn">Reports</button>
+        </div>
+
+        <!-- 6. VENDOR HOME -->
+        <div id="view-vendor-home" class="view">
+            <div class="header">Welcome Vendor</div>
+            <br>
+            <button class="btn">Your Item</button>
+            <button class="btn" onclick="showView('view-vendor-add')">Add New Item</button>
+            <button class="btn">Transaction</button>
+            <button class="btn btn-cancel" onclick="logout()">LogOut</button>
+        </div>
+
+        <!-- 7. VENDOR ADD PRODUCT -->
+        <div id="view-vendor-add" class="view">
+            <div class="header">Add Product</div>
+            <div class="top-nav"><button class="btn" onclick="showView('view-vendor-home')">Home</button><button class="btn btn-cancel" onclick="logout()">LogOut</button></div>
+            <div class="form-group"><input type="text" id="prod-name" placeholder="Product Name"></div>
+            <div class="form-group"><input type="number" id="prod-price" placeholder="Product Price"></div>
+            <button class="btn" onclick="addProduct()">Add The Product</button>
+        </div>
+
+        <!-- 8. USER HOME -->
+        <div id="view-user-home" class="view">
+            <div class="header">WELCOME USER</div>
+            <br>
+            <button class="btn" onclick="loadAllProducts(); showView('view-user-shop')">Shop All Products</button>
+            <button class="btn" onclick="showView('view-cart')">Cart</button>
+            <br><br>
+            <button class="btn btn-cancel" onclick="logout()">LogOut</button>
+        </div>
+
+        <!-- 9. SHOP PRODUCTS -->
+        <div id="view-user-shop" class="view">
+            <div class="top-nav"><button class="btn" onclick="showView('view-user-home')">Home</button><button class="btn btn-cancel" onclick="logout()">LogOut</button></div>
+            <div class="header">Products</div>
+            <div id="products-grid" class="grid-container"></div>
+            <button class="btn" onclick="showView('view-cart')">Go To Cart</button>
+        </div>
+
+        <!-- 10. CART -->
+        <div id="view-cart" class="view">
+            <div class="top-nav"><button class="btn" onclick="showView('view-user-home')">Home</button><button class="btn btn-cancel" onclick="logout()">LogOut</button></div>
+            <div class="header">Shopping Cart</div>
+            <table id="cart-table">
+                <thead><tr><th>Name</th><th>Price</th><th>Quantity</th><th>Total</th><th>Action</th></tr></thead>
+                <tbody id="cart-body"></tbody>
+            </table>
+            <div style="background: #4a90e2; color: white; padding: 10px; margin-top: 10px;">Grand Total: <span id="cart-grand-total">0</span></div>
+            <br><button class="btn" onclick="showView('view-checkout')">Proceed to Checkout</button>
+        </div>
+
+        <!-- 11. CHECKOUT -->
+        <div id="view-checkout" class="view">
+            <div class="header">Checkout</div>
+            <div class="form-group"><input type="text" id="co-name" placeholder="Name"></div>
+            <div class="form-group"><input type="text" id="co-address" placeholder="Address"></div>
+            <button class="btn" onclick="placeOrder()">Order Now</button>
+        </div>
+
+        <!-- 12. THANK YOU -->
+        <div id="view-thankyou" class="view">
+            <div class="header">THANK YOU</div>
+            <h2>Order Placed Successfully!</h2>
+            <button class="btn" onclick="showView('view-user-home'); clearCart();">Continue Shopping</button>
+        </div>
+
+    </div>
+
+    <script>
+        let cart = [];
+        let currentUser = null;
+
+        function showView(viewId) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+        }
+
+        async function handleLogin() {
+            const id = document.getElementById('login-id').value;
+            const pass = document.getElementById('login-pass').value;
+
+            const res = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, password: pass })
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                currentUser = data;
+                document.getElementById('login-error').innerText = "";
+                if (data.role === 'admin') showView('view-admin-home');
+                else if (data.role === 'vendor') showView('view-vendor-home');
+                else showView('view-user-home');
+            } else {
+                document.getElementById('login-error').innerText = data.message;
+            }
+        }
+
+        async function registerUser(role) {
+            const prefix = role === 'vendor' ? 'v' : 'u';
+            const name = document.getElementById(prefix + '-name').value;
+            const email = document.getElementById(prefix + '-email').value;
+            const password = document.getElementById(prefix + '-pass').value;
+            const category = role === 'vendor' ? document.getElementById('v-category').value : null;
+
+            const res = await fetch('/api/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, email, password, role, category })
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                alert('Registration Successful! Please Login.');
+                showView('view-login');
+            } else {
+                alert('Error: ' + data.message);
+            }
+        }
+
+        async function addProduct() {
+            const name = document.getElementById('prod-name').value;
+            const price = document.getElementById('prod-price').value;
+
+            const res = await fetch('/api/products', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, price, vendorId: currentUser.id })
+            });
+
+            if (res.ok) {
+                alert('Product Added');
+                document.getElementById('prod-name').value = '';
+                document.getElementById('prod-price').value = '';
+            }
+        }
+
+        async function loadAllProducts() {
+            const res = await fetch('/api/products');
+            const products = await res.json();
+            const container = document.getElementById('products-grid');
+            container.innerHTML = '';
+            
+            if(products.length === 0) {
+                container.innerHTML = '<p>No products available yet.</p>';
+                return;
+            }
+
+            products.forEach(p => {
+                const card = `
+                    <div class="card">
+                        ${p.name}
+                        <div class="card-inner">Price: $${p.price}</div>
+                        <button class="btn" style="background:white; color:black" onclick="addToCart('${p.name}', ${p.price})">Add to Cart</button>
+                    </div>`;
+                container.innerHTML += card;
+            });
+        }
+
+        function addToCart(name, price) {
+            const existing = cart.find(i => i.name === name);
+            if (existing) existing.qty++;
+            else cart.push({ name, price, qty: 1 });
+            alert(name + ' added to cart');
+            updateCartUI();
+        }
+
+        function updateCartUI() {
+            const tbody = document.getElementById('cart-body');
+            tbody.innerHTML = '';
+            let total = 0;
+            cart.forEach((item, idx) => {
+                const lineTotal = item.price * item.qty;
+                total += lineTotal;
+                tbody.innerHTML += `<tr><td>${item.name}</td><td>${item.price}</td><td>${item.qty}</td><td>${lineTotal}</td><td><button style="background:red;color:white;border:none" onclick="removeFromCart(${idx})">X</button></td></tr>`;
+            });
+            document.getElementById('cart-grand-total').innerText = total;
+        }
+
+        function removeFromCart(idx) {
+            cart.splice(idx, 1);
+            updateCartUI();
+        }
+
+        async function placeOrder() {
+            const total = document.getElementById('cart-grand-total').innerText;
+            const name = document.getElementById('co-name').value;
+            const address = document.getElementById('co-address').value;
+
+            const res = await fetch('/api/orders', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: currentUser.id, items: cart, total, details: { name, address } })
+            });
+
+            if (res.ok) showView('view-thankyou');
+        }
+
+        function logout() {
+            currentUser = null;
+            showView('view-index');
+            document.getElementById('login-id').value = '';
+            document.getElementById('login-pass').value = '';
+        }
+
+        function clearCart() {
+            cart = [];
+            updateCartUI();
+        }
+    </script>
+</body>
+</html>
